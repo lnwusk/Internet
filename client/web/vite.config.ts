@@ -16,7 +16,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        // 后端API路径是 /api/auth，不需要 /v1
+        // 后端API路径是 /api/v1
         rewrite: (path) => path,
         secure: false,
       }

@@ -1,7 +1,7 @@
 // API基础URL
 // 开发环境使用相对路径，通过Vite代理转发
 // 生产环境需要设置环境变量 VITE_API_BASE_URL
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 // Token存储键名
 export const STORAGE_KEYS = {

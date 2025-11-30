@@ -22,7 +22,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   initAuth: () => {
     const userInfo = storage.getUserInfo()
     const token = storage.getAccessToken()
-    
+
     if (userInfo && token) {
       set({
         user: userInfo,
@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (username: string, password: string) => {
     try {
       const response = await authApi.login({ username, password })
-      
+
       // 存储token和用户信息
       storage.setAccessToken(response.token)
       storage.setRefreshToken(response.refreshToken)
@@ -69,7 +69,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       })
 
       // 注册成功后自动登录
-      await login(username, password)
+      const response = await authApi.login({ username, password })
+
+      // 存储token和用户信息
+      storage.setAccessToken(response.token)
+      storage.setRefreshToken(response.refreshToken)
+      storage.setUserInfo(response.user)
+
+      set({
+        user: response.user,
+        isAuthenticated: true,
+      })
     } catch (error) {
       throw error
     }
