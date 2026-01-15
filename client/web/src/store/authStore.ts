@@ -81,6 +81,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
       })
     } catch (error) {
+      console.error('注册错误:', error)
       throw error
     }
   },
