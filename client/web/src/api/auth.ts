@@ -12,6 +12,20 @@ export const authApi = {
   // 用户登录
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', data)
+
+    // 检查响应数据
+    if (!response.data) {
+      throw new Error('登录失败：服务器未返回数据')
+    }
+
+    if (response.data.code !== 200) {
+      throw new Error(response.data.message || '登录失败')
+    }
+
+    if (!response.data.data) {
+      throw new Error('登录失败：响应数据格式错误')
+    }
+
     return response.data.data
   },
 

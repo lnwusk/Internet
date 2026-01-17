@@ -121,3 +121,155 @@ export interface ConfirmCoursesRequest {
   semester: string
 }
 
+// 作业相关类型
+export interface Assignment {
+  assignmentId: string
+  courseId: string
+  courseName: string
+  title: string
+  description?: string
+  dueDate: string
+  status: 'pending' | 'completed' | 'overdue'
+  source: 'moodle' | 'manual'
+  moodleUrl?: string
+  estimatedHours?: number
+  difficulty?: 'easy' | 'medium' | 'hard'
+  type?: string
+  wordCount?: number
+  completedAt?: string
+  createdAt: string
+}
+
+export interface AssignmentDetail extends Assignment {
+  // 扩展字段可在这里添加
+}
+
+export interface AssignmentListResponse {
+  assignments: Assignment[]
+  total: number
+  pendingCount: number
+  completedCount: number
+  overdueCount: number
+}
+
+// 学习任务相关类型
+export interface StudyTask {
+  taskId: string
+  title: string
+  assignmentId?: string
+  assignmentTitle?: string
+  courseId?: string
+  courseName?: string
+  scheduledDate: string
+  startTime: string
+  endTime: string
+  estimatedHours?: number
+  status: 'pending' | 'in-progress' | 'completed'
+  createdAt: string
+  completedAt?: string
+}
+
+export interface StudyTaskListResponse {
+  tasks: StudyTask[]
+}
+
+// AI规划相关类型
+export interface AiPlanResponse {
+  planId: string
+  status: 'processing' | 'completed' | 'failed'
+  progress?: number
+  assignments?: AssignmentPlan[]
+  summary?: PlanSummary
+  createdAt: string
+}
+
+export interface AssignmentPlan {
+  assignmentId: string
+  assignmentTitle: string
+  estimatedHours: number
+  difficulty: string
+  recommendedSchedule: ScheduleSlot[]
+}
+
+export interface ScheduleSlot {
+  date: string
+  startTime: string
+  endTime: string
+  hours: number
+  reason: string
+}
+
+export interface PlanSummary {
+  totalAssignments: number
+  totalEstimatedHours: number
+  scheduledDays: number
+  averageDailyHours: number
+}
+
+export interface AiPlanHistoryResponse {
+  plans: Array<{
+    planId: string
+    status: string
+    assignmentCount: number
+    createdAt: string
+  }>
+  pagination: {
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+  }
+}
+
+// 用户管理相关类型
+export interface UserProfile {
+  userId: string
+  username: string
+  nickname: string
+  studentId?: string
+  avatar?: string
+  createdAt: string
+  preferences?: UserPreferences
+}
+
+export interface UserPreferences {
+  notificationEnabled: boolean
+  courseReminderMinutes: number
+  assignmentReminderHours: number
+  preferredStudyTime?: 'morning' | 'afternoon' | 'evening'
+}
+
+// 通知相关类型
+export interface NotificationSettings {
+  enabled: boolean
+  courseReminder: {
+    enabled: boolean
+    minutesBefore: number
+  }
+  assignmentReminder: {
+    enabled: boolean
+    hoursBefore: number
+  }
+  pushEnabled: boolean
+}
+
+export interface Notification {
+  notificationId: string
+  type: 'course' | 'assignment'
+  title: string
+  content: string
+  relatedId: string
+  read: boolean
+  createdAt: string
+}
+
+export interface NotificationHistoryResponse {
+  notifications: Notification[]
+  pagination: {
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+  }
+}
+

@@ -59,7 +59,9 @@ export default function Register() {
         data.studentId || undefined,
         data.nickname || undefined
       )
-      navigate('/')
+      // 注册成功，提示用户并跳转到登录页
+      alert('注册成功！请使用刚才的账号密码登录')
+      navigate('/login')
     } catch (err: any) {
       setError(
         err.response?.data?.message ||

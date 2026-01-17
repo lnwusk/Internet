@@ -4,7 +4,12 @@ import { useAuthStore } from '@/store/authStore'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Home from '@/pages/Home'
+import Assignments from '@/pages/Assignments'
+import Tasks from '@/pages/Tasks'
+import AiPlanning from '@/pages/AiPlanning'
+import Profile from '@/pages/Profile'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import Layout from '@/components/Layout'
 
 function Router() {
   const { initAuth } = useAuthStore()
@@ -27,7 +32,49 @@ function Router() {
       path: '/',
       element: (
         <ProtectedRoute>
-          <Home />
+          <Layout>
+            <Home />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/assignments',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <Assignments />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/tasks',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <Tasks />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/ai-planning',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <AiPlanning />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/profile',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <Profile />
+          </Layout>
         </ProtectedRoute>
       ),
     },

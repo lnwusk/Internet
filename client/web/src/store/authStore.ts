@@ -57,30 +57,20 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  // 注册
+  // 注册（注册成功后需要手动登录）
   register: async (username: string, password: string, studentId?: string, nickname?: string) => {
     try {
-      // 先注册
-      await authApi.register({
+      console.log('开始注册...')
+      const registerResult = await authApi.register({
         username,
         password,
         studentId,
         nickname,
       })
-
-      // 注册成功后自动登录
-      const response = await authApi.login({ username, password })
-
-      // 存储token和用户信息
-      storage.setAccessToken(response.token)
-      storage.setRefreshToken(response.refreshToken)
-      storage.setUserInfo(response.user)
-
-      set({
-        user: response.user,
-        isAuthenticated: true,
-      })
-    } catch (error) {
+      console.log('注册成功:', registerResult)
+      return registerResult
+    } catch (error: any) {
+      console.error('注册错误:', error)
       throw error
     }
   },
