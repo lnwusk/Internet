@@ -50,7 +50,7 @@ export class AIPlanService {
     context: common.Context,
     planId: string,
     interval: number = 2000,
-    maxAttempts: number = 30
+    maxAttempts: number = 60  // 增加到60次，总超时120秒
   ): Promise<ApiResponse<CompletedAIPlanResult>> {
     let attempts = 0;
     while (attempts < maxAttempts) {
