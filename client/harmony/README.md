@@ -1,176 +1,113 @@
-# HarmonyOS 课程表客户端
+# NjuPlan (南大学业规划助手) - HarmonyOS Client
 
-## 开发环境要求
+本项目是 **NjuPlan** 的 HarmonyOS 客户端，旨在为南京大学学生提供一站式的学业日程管理工具。
 
-1. **DevEco Studio** (推荐版本 3.1.1+)
-2. **HarmonyOS SDK** API Level 8+
-3. **Node.js** (用于依赖管理)
+## 项目简介
 
-## 项目创建步骤
+NjuPlan 是一个集成了课表管理、作业/学习任务规划、AI 智能辅助的时间管理应用。本客户端采用 ArkTS + ArkUI 开发，适配 HarmonyOS 系统。
 
-### 1. 使用DevEco Studio创建新项目
+## 已实现功能 (Features)
 
-1. 打开 DevEco Studio
-2. 选择 "Create HarmonyOS Project"
-3. 选择 "Phone" 设备类型
-4. 选择 "Empty Ability (JS)" 或 "Empty Ability (eTS)"
-5. 项目配置：
-   - Project Name: `CourseSchedule`
-   - Bundle Name: `com.courseapp.schedule`
-   - Save Location: 本目录 (`client/harmony`)
+### 1. 用户认证 (Authentication)
+*   **注册 & 登录**：支持普通账号注册登录。
+*   **Token 管理**：实现了自动 Token 刷新机制 (401 自动重试)，提升用户体验。
+*   对应服务：`AuthService`
 
-### 2. 项目结构
+### 2. 智能课表 (Smart Schedule)
+*   **周视图**：清晰展示的一周课表，支持左右滑动切换周次。
+*   **课程详情**：点击课程块查看详细信息（教室、教师、周次等）。
+*   **手动管理**：支持手动添加、编辑、删除课程（用于手动添加的课程）。
+*   **课表导入**：支持从 **XLSX 文件** 导入官方课表。
+    *   **注意**：由于预览器文件系统限制，**文件选择功能需在真机或模拟器上测试**，预览器可能无法正常打开文件选择器。
+    *   流程：上传解析 -> 预览确认 -> 保存入库。
+*   对应服务：`CourseService`, `SyncService`
+
+### 3. 学习任务 (Study Tasks)
+*   **快速创建**：在课表空白处 **长按** 即可快速创建学习任务。
+*   **任务管理**：支持编辑任务详情、标记完成状态。
+*   **拖拽规划**：
+    *   支持 **上下拖拽** 任务块来调整任务的具体时间。
+    *   *注：为防止误操作和日期错乱，目前限制仅支持垂直方向拖拽（调整时间），不支持水平跨天拖拽。*
+*   对应服务：`StudyTaskService`
+
+### 4. 通知与设置 (Notifications)
+*   **通知设置**：可配置课程提醒（如课前 15 分钟）和作业截止提醒。
+*   **通知历史**：查看过往的推送通知记录。
+*   对应服务：`NotificationService`
+
+## 项目结构 (Directory Structure)
 
 ```
-client/harmony/
-├── entry/
-│   ├── src/main/
-│   │   ├── js/default/
-│   │   │   ├── pages/
-│   │   │   │   ├── index/          # 主页面(课程表)
-│   │   │   │   ├── login/          # 登录页面
-│   │   │   │   └── course/         # 课程详情页
-│   │   │   ├── common/             # 公共模块
-│   │   │   │   ├── utils/          # 工具类
-│   │   │   │   └── constants/      # 常量定义
-│   │   │   └── app.js              # 应用入口
-│   │   ├── resources/              # 资源文件
-│   │   └── config.json             # 应用配置
-│   └── build-profile.json5
-└── README.md
+entry/src/main/ets
+├── common          # 公共模块
+│   ├── models      # 数据模型定义 (ApiResponse, User, Course...)
+│   └── utils       # 工具类 (HttpUtil, Logger...)
+├── components      # 可复用组件
+├── pages           # 页面视图
+│   ├── Index.ets               # 主页 (Tabs)
+│   ├── LoginPage.ets           # 登录页
+│   ├── WeekView.ets            # 课表周视图 (核心页面)
+│   ├── CourseAddPage.ets       # 课程添加/编辑页
+│   ├── CourseImportPage.ets    # 课表导入页
+│   └── ...
+└── services        # 业务逻辑服务 (API 调用封装)
+    ├── AuthService.ets         # 认证服务
+    ├── CourseService.ets       # 课程服务
+    ├── StudyTaskService.ets    # 任务服务
+    ├── SyncService.ets         # 数据同步(导入)服务
+    └── NotificationService.ets # 通知服务
 ```
 
-### 3. 主要功能模块
+## 后端接口说明 (Backend APIs)
 
-#### 3.1 登录模块 (pages/login/)
-- 用户登录界面
-- 用户注册功能
-- JWT Token存储
+客户端通过 RESTful API 与后端交互，主要接口如下：
 
-#### 3.2 课程表模块 (pages/index/)
-- 周视图课程表显示
-- 课程时间冲突检查
-- 课程颜色标识
+### 认证模块
+*   `POST /auth/login`: 用户登录
+*   `POST /auth/register`: 用户注册
+*   `POST /auth/refresh`: 刷新 Token
 
-#### 3.3 课程管理模块 (pages/course/)
-- 添加课程
-- 编辑课程信息
-- 删除课程
+### 课程模块
+*   `GET /courses/week-schedule`: 获取周视图数据
+*   `GET /courses`: 获取课程列表
+*   `POST /courses`: 手动添加课程
+*   `PUT /courses/{id}`: 更新课程
+*   `DELETE /courses/{id}`: 删除课程
 
-### 4. 关键配置
+### 学习任务模块
+*   `GET /study-tasks`: 获取任务列表
+*   `POST /study-tasks`: 创建任务
+*   `PUT /study-tasks/{id}`: 更新任务 (支持拖拽更新时间)
+*   `POST /study-tasks/{id}/complete`: 标记完成
 
-#### 4.1 网络权限配置 (config.json)
-```json
-{
-  "module": {
-    "reqPermissions": [
-      {
-        "name": "ohos.permission.INTERNET"
-      },
-      {
-        "name": "ohos.permission.GET_NETWORK_INFO"
-      }
-    ]
-  }
-}
-```
+### 数据同步 (导入)
+*   `POST /sync/courses/upload`: 上传 XLSX 课表文件 (multipart/form-data)
+    *   *后端实现文档参考：/移动端开发\_xlsx导入课表接口文档.md*
+*   `POST /sync/courses/confirm`: 确认保存解析结果
 
-#### 4.2 API服务配置
-- 后端服务地址: `http://localhost:8080/api`
-- JWT Token存储使用: `@ohos.data.preferences`
+### 通知模块
+*   `GET /notifications/settings`: 获取设置
+*   `PUT /notifications/settings`: 更新设置
 
-### 5. 快速开始
+## 技术栈 (Tech Stack)
 
-1. 在DevEco Studio中打开项目
-2. 配置签名证书
-3. 连接HarmonyOS设备或启动模拟器
-4. 点击"Run"按钮运行应用
+*   **OS**: HarmonyOS (API 9+)
+*   **Language**: ArkTS
+*   **Framework**: ArkUI (Declarative Paradigm)
+*   **Network**: @ohos.net.http
+*   **Persistence**: @ohos.data.preferences
 
-### 6. 示例代码片段
+## 快速开始 (Getting Started)
 
-#### HTTP请求工具类 (common/utils/httpUtil.js)
-```javascript
-import http from '@ohos.net.http';
+1.  **环境准备**：安装 DevEco Studio 3.1+。
+2.  **后端服务**：确保 NjuPlan 后端服务已启动并在本地运行 (默认 `localhost:8080`)。
+    *   *注：真机调试需修改 `HttpUtil.ets` 中的 `BASE_URL` 为宿主机 IP。*
+3.  **运行项目**：
+    *   打开项目，Sync Gradle。
+    *   选择 `entry` 模块，点击 Run。
+    *   推荐使用 **API 9+ 模拟器** 或 **真机** 以获得完整体验（特别是文件导入功能）。
 
-export default class HttpUtil {
-  static async request(url, method = 'GET', data = null, headers = {}) {
-    const httpRequest = http.createHttp();
-    
-    const options = {
-      method,
-      header: {
-        'Content-Type': 'application/json',
-        ...headers
-      }
-    };
-    
-    if (data) {
-      options.extraData = JSON.stringify(data);
-    }
-    
-    try {
-      const response = await httpRequest.request(url, options);
-      return JSON.parse(response.result);
-    } catch (error) {
-      console.error('HTTP Request Error:', error);
-      throw error;
-    } finally {
-      httpRequest.destroy();
-    }
-  }
-  
-  static async get(url, headers = {}) {
-    return this.request(url, 'GET', null, headers);
-  }
-  
-  static async post(url, data, headers = {}) {
-    return this.request(url, 'POST', data, headers);
-  }
-}
-```
-
-### 7. 与后端API对接
-
-- 登录接口: `POST /api/auth/login`
-- 注册接口: `POST /api/auth/register`
-- 获取课程: `GET /api/courses`
-- 添加课程: `POST /api/courses`
-- 更新课程: `PUT /api/courses/{id}`
-- 删除课程: `DELETE /api/courses/{id}`
-
-### 8. 开发注意事项
-
-1. **高可用性考虑**:
-   - 实现离线数据缓存
-   - 网络异常处理
-   - 自动重连机制
-
-2. **UI响应式设计**:
-   - 适配不同屏幕尺寸
-   - 深色/浅色主题切换
-
-3. **性能优化**:
-   - 懒加载课程数据
-   - 图片资源优化
-   - 内存管理
-
-### 9. 构建和打包
-
-```bash
-# 在项目根目录执行
-hvigorw assembleHap --mode module -p product=default
-```
-
-### 10. 部署说明
-
-1. 生成签名HAP包
-2. 通过DevEco Studio安装到设备
-3. 或上传到华为应用市场
-
-## 技术栈
-
-- **UI框架**: ArkUI (声明式开发范式)
-- **开发语言**: JavaScript/TypeScript
-- **网络通信**: @ohos.net.http
-- **本地存储**: @ohos.data.preferences
-- **设备能力**: @ohos.deviceInfo
+---
+**Developers**:
+*   **Developer A**: 基础架构、课表核心、学习任务、数据同步
+*   **Developer B**: 作业管理、个人中心、AI 功能
