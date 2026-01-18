@@ -6,6 +6,13 @@
     "pages/CourseAddPage",
     "pages/CourseImportPage",
     "pages/NotificationSettingsPage",
-    "pages/NotificationHistoryPage"
+    "pages/NotificationHistoryPage",
+    "pages/AssignmentListPage",
+    "pages/AssignmentDetailPage",
+    "pages/UserProfilePage",
+    "pages/AIPlanPage",
+    "pages/AIPlanHistoryPage",
+    "pages/ChangePasswordPage",
+    "pages/AIPlanDetailPage"
   ]
 }

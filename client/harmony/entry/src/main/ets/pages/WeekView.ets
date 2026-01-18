@@ -220,9 +220,10 @@ export struct WeekView {
 
   // 获取指定周次的7天日期列表 (YYYY-MM-DD格式)
   getWeekDates(weekIndex: number): string[] {
-    // 假设学期开始日期是2026-01-13（周一）
-    // TODO: 从后端获取学期开始日期
-    const semesterStart = new Date('2026-01-13');
+    // 学期开始日期是2026-01-12（周一）
+    // 第1周: 01-12(周一) 到 01-18(周日)
+    // 第2周: 01-19(周一) 到 01-25(周日)
+    const semesterStart = new Date('2026-01-12');
     const weekStart = new Date(semesterStart);
     weekStart.setDate(semesterStart.getDate() + (weekIndex - 1) * 7);
 

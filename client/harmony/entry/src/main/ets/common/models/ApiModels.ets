@@ -219,3 +219,277 @@ export class NotificationHistoryData {
   notifications: NotificationItem[] = [];
   pagination: Pagination = new Pagination();
 }
+
+// --- 作业管理模型 ---
+
+// 作业状态
+export enum AssignmentStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  OVERDUE = 'overdue'
+}
+
+// 作业来源
+export enum AssignmentSource {
+  MOODLE = 'moodle',
+  MANUAL = 'manual'
+}
+
+// 作业难度
+export enum AssignmentDifficulty {
+  EASY = 'easy',
+  MEDIUM = 'medium',
+  HARD = 'hard'
+}
+
+// 作业类型
+export enum AssignmentType {
+  PROGRAMMING = 'programming',
+  ESSAY = 'essay',
+  REPORT = 'report',
+  PRESENTATION = 'presentation'
+}
+
+// 排序方式
+export enum SortBy {
+  DDL = 'ddl',
+  CREATED = 'created'
+}
+
+// 排序顺序
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc'
+}
+
+// 基础作业信息
+export class Assignment {
+  assignmentId: string = '';
+  courseId: string = '';
+  courseName: string = '';
+  title: string = '';
+  description: string = '';
+  dueDate: string = '';
+  status: string = 'pending';
+  source: string = 'manual';
+  moodleUrl: string = '';
+  estimatedHours: number = 0;
+  completedAt: string = '';
+  createdAt: string = '';
+}
+
+// 作业详情
+export class AssignmentDetail extends Assignment {
+  difficulty: string = '';
+  type: string = '';
+  wordCount: number = 0;
+}
+
+// 作业列表数据
+export class AssignmentListData {
+  assignments: Assignment[] = [];
+  total: number = 0;
+  pendingCount: number = 0;
+  completedCount: number = 0;
+  overdueCount: number = 0;
+}
+
+// 创建作业请求
+export class CreateAssignmentRequest {
+  courseId: string = '';
+  title: string = '';
+  description: string = '';
+  dueDate: string = '';
+  type: string = '';
+  wordCount: number = 0;
+  difficulty: string = '';
+}
+
+// 更新作业请求
+export class UpdateAssignmentRequest {
+  courseId?: string;
+  title?: string;
+  description?: string;
+  dueDate?: string;
+  type?: string;
+  wordCount?: number;
+  difficulty?: string;
+}
+
+// 作业操作响应
+export class AssignmentOperationResponse {
+  assignmentId: string = '';
+  title: string = '';
+  source: string = '';
+  createdAt: string = '';
+}
+
+// 标记完成响应
+export class CompleteAssignmentResponse {
+  assignmentId: string = '';
+  status: string = '';
+  completedAt: string = '';
+}
+
+// 作业查询参数
+export class AssignmentQueryParams {
+  courseId?: string;
+  status?: string;
+  sortBy?: string;
+  order?: string;
+}
+
+// --- AI 规划模型 ---
+
+// AI规划状态
+export enum AIPlanStatus {
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed'
+}
+
+// AI规划偏好
+export class AIPlanPreferences {
+  preferredStudyTime: string = 'morning';
+  dailyMaxHours: number = 6;
+  avoidWeekend: boolean = false;
+}
+
+// 提交AI规划请求
+export class SubmitAIPlanRequest {
+  assignmentIds: string[] = [];
+  startDate: string = '';
+  endDate: string = '';
+  preferences: AIPlanPreferences = new AIPlanPreferences();
+}
+
+// 提交AI规划响应
+export class SubmitAIPlanResponse {
+  planId: string = '';
+  status: string = 'processing';
+  estimatedTime: number = 30;
+}
+
+// 推荐的时间段
+export class RecommendedSchedule {
+  date: string = '';
+  startTime: string = '';
+  endTime: string = '';
+  hours: number = 0;
+  reason: string = '';
+}
+
+// 作业规划详情
+export class AssignmentPlan {
+  assignmentId: string = '';
+  assignmentTitle: string = '';
+  estimatedHours: number = 0;
+  difficulty: string = '';
+  recommendedSchedule: RecommendedSchedule[] = [];
+}
+
+// 规划总结
+export class PlanSummary {
+  totalAssignments: number = 0;
+  totalEstimatedHours: number = 0;
+  scheduledDays: number = 0;
+  averageDailyHours: number = 0;
+}
+
+// 完成的AI规划结果
+export class CompletedAIPlanResult {
+  planId: string = '';
+  status: string = '';
+  assignments: AssignmentPlan[] = [];
+  summary: PlanSummary = new PlanSummary();
+  createdAt: string = '';
+}
+
+// 应用AI规划选中项
+export class ApplyPlanSelectedItem {
+  assignmentId: string = '';
+  scheduleIndex: number = 0;
+}
+
+// 应用AI规划请求
+export class ApplyAIPlanRequest {
+  applyAll: boolean = true;
+  selectedItems: ApplyPlanSelectedItem[] = [];
+}
+
+// 应用AI规划响应
+export class ApplyAIPlanResponse {
+  createdTasks: number = 0;
+  taskIds: string[] = [];
+}
+
+// AI规划历史记录
+export class AIPlanHistory {
+  planId: string = '';
+  status: string = '';
+  assignmentCount: number = 0;
+  createdAt: string = '';
+}
+
+// AI规划历史数据
+export class AIPlanHistoryData {
+  plans: AIPlanHistory[] = [];
+  pagination: Pagination = new Pagination();
+}
+
+// AI规划历史查询参数
+export class AIPlanHistoryQueryParams {
+  page: number = 1;
+  pageSize: number = 10;
+}
+
+// --- 用户管理模型 ---
+
+// 用户偏好设置
+export class UserPreferences {
+  notificationEnabled: boolean = true;
+  courseReminderMinutes: number = 15;
+  assignmentReminderHours: number = 24;
+  preferredStudyTime: string = 'morning';
+}
+
+// 用户信息
+export class UserProfile {
+  userId: string = '';
+  username: string = '';
+  nickname: string = '';
+  studentId: string = '';
+  avatar: string = '';
+  createdAt: string = '';
+  preferences: UserPreferences = new UserPreferences();
+}
+
+// 更新用户信息请求
+export class UpdateProfileRequest {
+  nickname?: string;
+  studentId?: string;
+  avatar?: string;
+}
+
+// 更新用户偏好请求
+export class UpdatePreferencesRequest {
+  notificationEnabled: boolean = true;
+  courseReminderMinutes: number = 15;
+  assignmentReminderHours: number = 24;
+  preferredStudyTime: string = 'morning';
+}
+
+// 更新用户信息响应
+export class UpdateProfileResponse {
+  userId: string = '';
+  nickname: string = '';
+  studentId: string = '';
+  avatar: string = '';
+}
+
+// 修改密码请求
+export class ChangePasswordRequest {
+  oldPassword: string = '';
+  newPassword: string = '';
+}
+

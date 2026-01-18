@@ -1,6 +1,7 @@
 import common from '@ohos.app.ability.common';
-import { StudyTask, CreateStudyTaskRequest } from '../common/models/ApiModels';
+import { StudyTask, CreateStudyTaskRequest, Assignment, AssignmentListData, ApiResponse } from '../common/models/ApiModels';
 import { StudyTaskService } from '../services/StudyTaskService';
+import { AssignmentService } from '../services/AssignmentService';
 import { Logger } from '../common/utils/Logger';
 
 // 学习任务添加/编辑弹窗
@@ -13,6 +14,11 @@ export struct StudyTaskDialog {
   @State description: string = '';
   @State isLoading: boolean = false;
   @State errorMessage: string = '';
+
+  // 作业关联
+  @State assignments: Assignment[] = [];
+  @State selectedAssignmentIndex: number = -1;
+  @State selectedAssignmentId: string = '';
 
   // 外部传入的参数
   editTask?: StudyTask;
@@ -31,20 +37,22 @@ export struct StudyTaskDialog {
 
   aboutToAppear() {
     this.context = getContext(this) as common.UIAbilityContext;
+    this.loadAssignments();
+
     if (this.editTask) {
-      // 编辑模式
       this.title = this.editTask.title;
       this.scheduledDate = this.editTask.scheduledDate;
       this.startTime = this.editTask.startTime;
       this.description = this.editTask.description || '';
-      // 解析时间
+      if (this.editTask.assignmentId) {
+        this.selectedAssignmentId = this.editTask.assignmentId;
+      }
       const parts = this.startTime.split(':');
       if (parts.length >= 2) {
         this.selectedHour = parts[0];
         this.selectedMinute = parts[1];
       }
     } else {
-      // 新建模式
       if (this.presetDate) {
         this.scheduledDate = this.presetDate;
       }
@@ -53,12 +61,28 @@ export struct StudyTaskDialog {
         const parts = this.presetStartTime.split(':');
         if (parts.length >= 2) {
           this.selectedHour = parts[0];
-          // 四舍五入到5分钟
           const min = parseInt(parts[1]);
           const roundedMin = Math.floor(min / 5) * 5;
           this.selectedMinute = roundedMin.toString().padStart(2, '0');
         }
       }
+    }
+  }
+
+  async loadAssignments() {
+    if (!this.context) return;
+    try {
+      const response: ApiResponse<AssignmentListData> = await AssignmentService.getPendingAssignments(this.context);
+      if (response.code === 200 && response.data) {
+        this.assignments = response.data.assignments;
+        // 如果编辑模式且有关联作业，找到索引
+        if (this.selectedAssignmentId) {
+          const idx = this.assignments.findIndex(a => a.assignmentId === this.selectedAssignmentId);
+          if (idx >= 0) this.selectedAssignmentIndex = idx;
+        }
+      }
+    } catch (err) {
+      Logger.error('Load assignments failed:', JSON.stringify(err));
     }
   }
 
@@ -85,8 +109,9 @@ export struct StudyTaskDialog {
       taskData.title = this.title;
       taskData.scheduledDate = this.scheduledDate;
       taskData.startTime = this.startTime;
-      taskData.endTime = this.startTime; // 只有开始时间
+      taskData.endTime = this.startTime;
       taskData.description = this.description;
+      taskData.assignmentId = this.selectedAssignmentId;
 
       if (this.editTask) {
         const response = await StudyTaskService.updateStudyTask(this.context, this.editTask.taskId, taskData);
@@ -181,6 +206,39 @@ export struct StudyTaskDialog {
       .width('100%')
       .margin({ bottom: 12 })
 
+      // 关联作业
+      Column() {
+        Text('关联作业（可选）').fontSize(14).fontColor('#666').margin({ bottom: 4 })
+        if (this.assignments.length > 0) {
+          Select([{ value: '不关联作业' } as SelectOption].concat(
+            this.assignments.map((a: Assignment) => {
+              return { value: `${a.title} (${a.courseName})` } as SelectOption;
+            })
+          ))
+            .selected(this.selectedAssignmentIndex >= 0 ? this.selectedAssignmentIndex + 1 : 0)
+            .value(this.selectedAssignmentIndex >= 0 ? this.assignments[this.selectedAssignmentIndex].title : '不关联作业')
+            .width('100%').height(44).backgroundColor('#f5f5f5').borderRadius(8)
+            .onSelect((index: number) => {
+              if (index === 0) {
+                this.selectedAssignmentIndex = -1;
+                this.selectedAssignmentId = '';
+              } else {
+                this.selectedAssignmentIndex = index - 1;
+                this.selectedAssignmentId = this.assignments[index - 1].assignmentId;
+                // 自动填充标题
+                if (!this.title) {
+                  this.title = this.assignments[index - 1].title;
+                }
+              }
+            })
+        } else {
+          Text('暂无待完成作业').fontSize(12).fontColor('#999')
+        }
+      }
+      .alignItems(HorizontalAlign.Start)
+      .width('100%')
+      .margin({ bottom: 12 })
+
       // 日期
       Column() {
         Text('日期').fontSize(14).fontColor('#666').margin({ bottom: 4 })
@@ -198,37 +256,38 @@ export struct StudyTaskDialog {
       Column() {
         Text('开始时间').fontSize(14).fontColor('#666').margin({ bottom: 4 })
 
-        Row() {
+        Row({ space: 8 }) {
           // 小时选择
-          Select(this.hourOptions.map(h => ({ value: h } as SelectOption)))
+          Select(this.hourOptions.map((h: string) => {
+            return { value: h } as SelectOption;
+          }))
+            .selected(this.hourOptions.indexOf(this.selectedHour))
             .value(this.selectedHour)
-            .font({ size: 16 })
+            .height(44)
             .backgroundColor('#f5f5f5')
             .borderRadius(8)
-            .onSelect((index: number, value: string) => {
-              this.selectedHour = value;
+            .layoutWeight(1)
+            .onSelect((index: number) => {
+              this.selectedHour = this.hourOptions[index];
               this.updateStartTime();
             })
 
-          Text(':').fontSize(20).margin({ left: 8, right: 8 })
+          Text(':').fontSize(20).fontColor('#333')
 
-          // 分钟选择 (5分钟间隔)
-          Select(this.minuteOptions.map(m => ({ value: m } as SelectOption)))
+          // 分钟选择
+          Select(this.minuteOptions.map((m: string) => {
+            return { value: m } as SelectOption;
+          }))
+            .selected(this.minuteOptions.indexOf(this.selectedMinute))
             .value(this.selectedMinute)
-            .font({ size: 16 })
+            .height(44)
             .backgroundColor('#f5f5f5')
             .borderRadius(8)
-            .onSelect((index: number, value: string) => {
-              this.selectedMinute = value;
+            .layoutWeight(1)
+            .onSelect((index: number) => {
+              this.selectedMinute = this.minuteOptions[index];
               this.updateStartTime();
             })
-
-          Blank()
-
-          Text(this.startTime)
-            .fontSize(16)
-            .fontColor('#007DFF')
-            .fontWeight(FontWeight.Medium)
         }
         .width('100%')
       }
@@ -236,78 +295,60 @@ export struct StudyTaskDialog {
       .width('100%')
       .margin({ bottom: 12 })
 
-      // 关联作业 (占位按钮)
+      // 描述
       Column() {
-        Text('关联作业（可选）').fontSize(14).fontColor('#666').margin({ bottom: 4 })
-        Button('选择作业...')
-          .width('100%')
-          .height(44)
+        Text('备注（可选）').fontSize(14).fontColor('#666').margin({ bottom: 4 })
+        TextArea({ placeholder: '任务详情...', text: this.description })
+          .onChange((value: string) => this.description = value)
+          .height(80)
           .backgroundColor('#f5f5f5')
-          .fontColor('#999')
-          .onClick(() => {
-            // TODO: 作业功能实现后打开作业选择列表
-            this.errorMessage = '作业功能开发中...';
-          })
+          .borderRadius(8)
       }
       .alignItems(HorizontalAlign.Start)
       .width('100%')
       .margin({ bottom: 16 })
 
-      // 错误消息
+      // 错误信息
       if (this.errorMessage) {
         Text(this.errorMessage)
           .fontSize(14)
-          .fontColor('#dc3545')
+          .fontColor('#FF3B30')
           .margin({ bottom: 12 })
       }
 
-      // 按钮区域
+      // 按钮区
       if (this.editTask) {
-        Row() {
+        Row({ space: 12 }) {
           Button('删除')
             .layoutWeight(1)
             .height(44)
-            .backgroundColor('#dc3545')
-            .margin({ right: 4 })
+            .backgroundColor('#FF3B30')
+            .fontColor(Color.White)
             .onClick(() => this.deleteTask())
 
-          Button(this.editTask.status === 'completed' ? '✓ 已完成' : '标记完成')
+          Button('完成')
             .layoutWeight(1)
             .height(44)
-            .backgroundColor(this.editTask.status === 'completed' ? '#6c757d' : '#28a745')
-            .margin({ left: 4, right: 4 })
-            .enabled(this.editTask.status !== 'completed')
+            .backgroundColor('#34C759')
+            .fontColor(Color.White)
             .onClick(() => this.completeTask())
 
           Button('保存')
             .layoutWeight(1)
             .height(44)
             .backgroundColor('#007DFF')
-            .margin({ left: 4 })
+            .fontColor(Color.White)
             .onClick(() => this.saveTask())
         }
         .width('100%')
       } else {
-        Row() {
-          Button('取消')
-            .layoutWeight(1)
-            .height(44)
-            .backgroundColor('#6c757d')
-            .margin({ right: 8 })
-            .onClick(() => this.controller.close())
-
-          Button('创建任务')
-            .layoutWeight(1)
-            .height(44)
-            .backgroundColor('#28a745')
-            .margin({ left: 8 })
-            .onClick(() => this.saveTask())
-        }
-        .width('100%')
-      }
-
-      if (this.isLoading) {
-        LoadingProgress().width(30).height(30).margin({ top: 10 })
+        Button(this.isLoading ? '保存中...' : '保存')
+          .width('100%')
+          .height(44)
+          .backgroundColor('#007DFF')
+          .fontColor(Color.White)
+          .enabled(!this.isLoading)
+          .onClick(() => this.saveTask())
       }
     }
     .padding(20)
