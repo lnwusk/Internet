@@ -5,11 +5,14 @@ import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Home from '@/pages/Home'
 import Assignments from '@/pages/Assignments'
+import AssignmentAdd from '@/pages/AssignmentAdd'
+import AssignmentDetail from '@/pages/AssignmentDetail'
 import Tasks from '@/pages/Tasks'
 import AiPlanning from '@/pages/AiPlanning'
 import Profile from '@/pages/Profile'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Layout from '@/components/Layout'
+import NotFound from '@/pages/NotFound'
 
 function Router() {
   const { initAuth } = useAuthStore()
@@ -49,6 +52,26 @@ function Router() {
       ),
     },
     {
+      path: '/assignments/add',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <AssignmentAdd />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/assignments/:id',
+      element: (
+        <ProtectedRoute>
+          <Layout>
+            <AssignmentDetail />
+          </Layout>
+        </ProtectedRoute>
+      ),
+    },
+    {
       path: '/tasks',
       element: (
         <ProtectedRoute>
@@ -77,6 +100,10 @@ function Router() {
           </Layout>
         </ProtectedRoute>
       ),
+    },
+    {
+      path: '*',
+      element: <NotFound />,
     },
   ], {
     future: {

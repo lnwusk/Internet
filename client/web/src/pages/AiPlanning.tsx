@@ -75,7 +75,8 @@ export default function AiPlanning() {
                 }
 
                 if (result.status === 'failed') {
-                    alert('AI规划失败，请重试')
+                    const errorMsg = result.errorMessage || 'AI规划失败，请重试'
+                    alert('规划失败：' + errorMsg)
                     setStep('select')
                     setLoading(false)
                     return
@@ -146,8 +147,8 @@ export default function AiPlanning() {
                                     <div
                                         key={assignment.assignmentId}
                                         className={`p-4 border-2 rounded-lg cursor-pointer transition ${selectedIds.includes(assignment.assignmentId)
-                                                ? 'border-blue-500 bg-blue-50'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-blue-500 bg-blue-50'
+                                            : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                         onClick={() => toggleSelection(assignment.assignmentId)}
                                     >
